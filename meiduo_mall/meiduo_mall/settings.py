@@ -25,7 +25,7 @@ SECRET_KEY = 'w7dplln^%5_=al%2qir&%l3m5s&xa=uhnc8flqksbp9t#_lkjg'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1','www.meiduo.site']
 
 
 # Application definition
@@ -63,8 +63,9 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
+            'environmet':'utils.jinja2_env.jinja2_environment'
         },
-        'environmet':'utils.jinja2_env.jinja2_environment'
+
     },
 ]
 
@@ -140,8 +141,10 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
-
+# 静态文件
 STATIC_URL = '/static/'
+# 配置静态文件加载路径
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 # 日志
 LOGGING = {
     'version': 1,
