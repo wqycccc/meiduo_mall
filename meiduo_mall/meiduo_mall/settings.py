@@ -187,3 +187,6 @@ LOGGING = {
         },
     }
 }
+
+# 用我们的user替换电脑的user
+AUTH_USER_MODEL = 'users.User'

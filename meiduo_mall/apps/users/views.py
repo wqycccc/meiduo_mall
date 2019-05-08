@@ -3,8 +3,12 @@ from django.views import View
 
 
 class RegisterView(View):
+    # 提供注册界面
     def get(self,request):
         return render(request,'register.html')
+    # 实现用户注册
+    def post(self,request):
+        pass
 
 # Create your views here.
 """
