@@ -3,9 +3,8 @@ from django import http
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.views import View
-
-from apps.users.models import User
 import logging
+from .models import User
 
 logger = logging.getLogger('django')
 
@@ -15,7 +14,6 @@ class RegisterView(View):
         return render(request,'register.html')
     # 实现用户注册
     def post(self,request):
-        pass
         # ①接收数据 request.POST
         data = request.POST
         # ②分别获取数据 username,password
@@ -29,10 +27,10 @@ class RegisterView(View):
         if not all([username, password, password2, mobile, allow]):
             return http.HttpResponseBadRequest('资料填写不完整')
         # ④验证用户名
-        if re.match(r'^[0-9a-zA-Z_-]{5,20}$',username):
+        if not re.match(r'^[0-9a-zA-Z_-]{5,20}$',username):
             return http.HttpResponseBadRequest('用户名格式不对哦')
         # ⑤验证密码
-        if re.match(r'^[0-9a-zA-Z]{8,20}',password):
+        if not re.match(r'^[0-9a-zA-Z]{8,20}',password):
             return http.HttpResponseBadRequest('密码格式不对哦')
         # ⑥验证确认密码
         if password2 != password:
@@ -45,19 +43,55 @@ class RegisterView(View):
             return http.HttpResponseBadRequest('您还没有同意协议呢')
         # ⑨保存数据
         try:
-            user = User.objects.create_user(
-            username = username,
-            password = password,
-            mobile = mobile
-            )
+            user = User.objects.create_user(username=username,
+                                            password=password,
+                                            mobile=mobile)
         except Exception as e:
             logger.error(e)
             return render(request, 'register.html', context={'register_errmsg': '创建用户失败'})
+
+        """
+            注册: 不同的产品需求是不一样的
+                有的是 跳转到首页 v  默认登陆  应该有session信息
+                有的是 跳转到登陆页面
+            """
+
+        # 设置登陆信息(session)
+        from django.contrib.auth import login
+        login(request,user)
+
 
         # ⑩跳转首页,返回相应
         return redirect(reverse('contents:index'))
         # return http.HttpResponse('ok')
 
+    """
+        1. 需求:
+            当用户输入在输入用户名之后,光标失去焦点之后,前端应该发送一个ajax请求
+            这个ajax请求 需要包含一个参数 username
+        2.后台
+            ① 确定请求方式和路由
+                提取URL的特定部分，如/weather/beijing/2018，可以在服务器端的路由中用正则表达式截取；
+                查询字符串（query string)，形如key1=value1&key2=value2
+
+                GET  路由   usernames/(?P<username>[a-zA-Z0-9_]{5,20})/
+                            register/count/?username=username
+            ② 大体步骤写下来
+                一.参数校验(已经在路由中做过了)
+                二.根据用户名进行查询
+                三.返回相应
+        """
+class RegisterUsernameCountView(View):
+    # 判断用户名是否重复注册
+    def get(self,request,username):
+        # 一.参数校验(已经在路由中做过了)
+        # if not re.match(r'')
+        # 二.根据用户名进行查询
+        # filter() 返回的是一个列表
+        # User.objects.filter(username__exact=username)
+        count = User.objects.filter(username=username).count()
+        # 三.返回相应
+        return http.JsonResponse({'count':count})
 # Create your views here.
 """
 功能点如何分析:

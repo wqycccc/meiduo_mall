@@ -65,8 +65,23 @@ var vm = new Vue({
                 this.error_name_message = '请输入5-20个字符的用户名';
                 this.error_name = true;
             }
-
-
+            if (this.error_name== false);{
+                //    符合5-20个字符再进行发送请求
+                let url = '/usernames/'+ this.username;
+                axios.get(url).then(response =>{
+                    //通过response.data获取数据
+                    data = response.data;
+                //    判断是否有数据
+                    if (data.count ==0){
+                        this.error_name = false;
+                    }else {
+                        this.error_name = true;
+                        this.error_name_message =('大哥,你儿子先把你用户名抢了!')
+                    }
+                }).catch(error => {
+                    console.log(error)
+                    })
+            }
         },
         // 检查密码
         check_password: function () {

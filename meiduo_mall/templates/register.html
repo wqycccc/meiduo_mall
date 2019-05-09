@@ -6,6 +6,7 @@
 	<link rel="stylesheet" type="text/css" href="{{ static('css/reset.css') }}">
 	<link rel="stylesheet" type="text/css" href="{{ static('css/main.css') }}">
     <script type="text/javascript" src="{{ static('js/vue-2.5.16.js') }}"></script>
+    <script type="text/javascript" src="{{ static('js/axios-0.18.0.min.js') }}"></script>
 </head>
 <body>
 	<div id="app">
@@ -62,7 +63,7 @@
 						<label>同意”美多商城用户使用协议“</label>
 						<span class="error_tip"v-show = 'error_allow'>[[ error_allow_message ]]</span>
 					</li>
-                     {% if register_message %}
+                    {% if register_message %}
                         <span style="color: red">{{ register_message }}</span>
                     {% endif %}
 					<li class="reg_sub">
