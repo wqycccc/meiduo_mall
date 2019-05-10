@@ -92,6 +92,14 @@ class RegisterUsernameCountView(View):
         count = User.objects.filter(username=username).count()
         # 三.返回相应
         return http.JsonResponse({'count':count})
+class RegisterMobileCountView(View):
+        # 判断手机号是否重复注册
+    def get(self,request, mobile):
+
+        count = User.objects.filter(mobile = mobile).count()
+
+        return http.JsonResponse({ 'count': count})
+
 # Create your views here.
 """
 功能点如何分析:

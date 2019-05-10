@@ -109,6 +109,20 @@ var vm = new Vue({
                 this.error_mobile_message = '您输入的手机号格式不正确';
                 this.error_mobile = true;
             }
+            if (this.error_mobile==false){
+                let url = '/mobile/'+ this.mobile;
+                axios.get(url).then(response =>{
+                    data = response.data;
+                    if (data.count == 0){
+                        this.error_mobile= false;
+                    }else {
+                        this.error_mobile = true;
+                        this.error_mobile_message = ('大哥,手机号已被别人注册了哦')
+                    }
+                }).catch(error =>{
+                    console.log(error)
+                })
+            }
 
         },
         // 检查图片验证码
