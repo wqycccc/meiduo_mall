@@ -4,6 +4,9 @@ from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.views import View
 import logging
+
+from django_redis import get_redis_connection
+
 from .models import User
 
 logger = logging.getLogger('django')
@@ -22,6 +25,7 @@ class RegisterView(View):
         password2 = data.get('password2')
         mobile = data.get('mobile')
         allow = data.get('allow')
+        sms_code_client = data.get('sms_code')
 
         # ③判断要求的数据是否齐全 [少参数就没有必要继续验证了]
         if not all([username, password, password2, mobile, allow]):
@@ -41,6 +45,17 @@ class RegisterView(View):
         # ⑧验证是否同意协议
         if allow != 'on':
             return http.HttpResponseBadRequest('您还没有同意协议呢')
+        # 判断用户提交的短信验证码是否与redis中的一致
+        # 连接redis数据库
+        redis_conn = get_redis_connection('code')
+        # 获取redis中的短信验证码
+        sms_code_server = redis_conn.get('sms_%s'%mobile)
+        # 判断库中的短信验证码是否过期
+        if sms_code_server is None:
+            return http.HttpResponseBadRequest('短信验证码已经过期了')
+        # 比对是否一致
+        if sms_code_server.decode() != sms_code_client:
+            return http.HttpResponseBadRequest('短信验证码不一致哦')
         # ⑨保存数据
         try:
             user = User.objects.create_user(username=username,

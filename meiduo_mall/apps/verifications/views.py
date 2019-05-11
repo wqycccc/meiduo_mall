@@ -4,8 +4,10 @@ from django.views import View
 # Create your views here.
 from django_redis import get_redis_connection
 
+from apps.verifications.constant import SMS_CODE_EXPIRE_TIME, YUNTONGXUN_EXPIRE_TIME
 from libs.captcha.captcha import captcha
 from libs.yuntongxun.sms import CCP
+from utils.response_code import RETCODE
 
 
 class ImageCodeView(View):
@@ -22,6 +24,9 @@ class ImageCodeView(View):
 
         # 响应图片验证码
         return http.HttpResponse(image, content_type='image/jpeg')
+import logging
+
+logger = logging.getLogger('django')
 
 class SMSCodeView(View):
      # 短信验证码
@@ -32,25 +37,39 @@ class SMSCodeView(View):
         uuid = parame.get('image_code_id')
         # 用户输入的图片验证码内容
         text_client = parame.get('image_code')
-        # 链接redis
-        redis_conn = get_redis_connection('code')
-        # 根据uuid获取redis中验证码的数据
-        text_server = redis_conn.get('img_%s'%uuid)
-        # 如果验证码过期
-        if text_server is None:
-            return http.HttpResponseBadRequest('图片验证码过期了')
-        # 对比数据库中的图片验证码
-        if text_server != text_client:
-            return http.HttpResponseBadRequest('图片验证码不一致')
+
+        # 连接redis
+        # 在操作外界数据时,因为不确定会发生什么,所以这类型数据都要用捕获异常
+        try:
+            redis_conn = get_redis_connection('code')
+            # 根据uuid获取redis中验证码的数据
+            text_server = redis_conn.get('img_%s'%uuid)
+            # 如果验证码过期
+            if text_server is None:
+                return http.HttpResponseBadRequest('图片验证码过期了')
+            # 对比数据库中的图片验证码
+            if text_server.decode().lower() != text_client.lower():
+                return http.HttpResponseBadRequest('图片验证码不一致')
+            # 删除redis中已经获取的图片验证码内容
+            redis_conn.delete("img%s"%uuid)
+        except Exception as e:
+            logger.error(e)
+            return http.HttpResponseBadRequest("数据库链接问题")
+
+        # 先看有没有已经获取
+        send_flag = redis_conn.get('send_flag%s'%mobile)
+
 
         from random import randint
         # 生成短信验证码
         sms_code = '%06d'%randint(0,999999)
+        # .info会将生成的短信验证码显示到控制台
+        logger.info(sms_code)
         # 保存短信验证码
-        redis_conn.setex('sms_%s'%mobile, 500, sms_code)
+        redis_conn.setex('sms_%s'%mobile, SMS_CODE_EXPIRE_TIME, sms_code)
         # 发送短信验证码
-        CCP().send_template_sms(mobile,[sms_code,5],1)
-        return http.JsonResponse({ 'code':200 })
+        CCP().send_template_sms(mobile,[sms_code,YUNTONGXUN_EXPIRE_TIME],1)
+        return http.JsonResponse({ 'code':RETCODE.OK })
 
 
         pass

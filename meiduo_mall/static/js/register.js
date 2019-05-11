@@ -96,6 +96,7 @@ var vm = new Vue({
         check_password2: function () {
             if (this.password != this.password2) {
                 this.error_check_password = true;
+                this.error_password2_message = '两次输入密码不一致'
             } else {
                 this.error_check_password = false;
             }
@@ -160,10 +161,10 @@ var vm = new Vue({
             this.sending_flag = true;
 
             // 校验参数，保证输入框有数据填写
-            this.check_phone();
+            this.check_mobile();
             this.check_image_code();
 
-            if (this.error_phone == true || this.error_image_code == true) {
+            if (this.error_mobile  == true || this.error_image_code == true) {
                 this.sending_flag = false;
                 return;
             }

@@ -105,7 +105,7 @@ CACHES = {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         }
     },
-    # 存放图片验证码的2号库
+    # 存放图片验证码的2号库r
     "code":{ # 验证码
         "BACKEND": "django_redis.cache.RedisCache",
         "LOCATION": "redis://127.0.0.1:6379/2",
