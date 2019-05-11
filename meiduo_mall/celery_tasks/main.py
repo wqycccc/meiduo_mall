@@ -28,6 +28,7 @@ app = Celery('celery_tasks')
 # 加载配置文件   config_from_object后面直接写配置文件的路径
 app.config_from_object('celery_tasks.config')
 
-
+# 让celery自动检测任务
+app.autodiscover_tasks(['celery_tasks.sms'])
 
 

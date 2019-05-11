@@ -4,6 +4,7 @@ from django.views import View
 # Create your views here.
 from django_redis import get_redis_connection
 from apps.verifications.constant import SMS_CODE_EXPIRE_TIME,YUNTONGXUN_EXPIRE_TIME
+from celery_tasks.sms.tasks import send_sms_code
 from libs.captcha.captcha import captcha
 from libs.yuntongxun.sms import CCP
 from utils.response_code import RETCODE
@@ -76,5 +77,6 @@ class SMSCodeView(View):
 
         # 发送短信验证码
         # CCP().send_template_sms(mobile,[sms_code,YUNTONGXUN_EXPIRE_TIME],1)
+        send_sms_code.delay(mobile,sms_code)
         return http.JsonResponse({ 'code':RETCODE.OK })
 
