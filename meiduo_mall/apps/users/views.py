@@ -4,7 +4,6 @@ from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.views import View
 import logging
-
 from django_redis import get_redis_connection
 
 from .models import User

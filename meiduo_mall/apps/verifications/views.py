@@ -3,8 +3,7 @@ from django import http
 from django.views import View
 # Create your views here.
 from django_redis import get_redis_connection
-
-from apps.verifications.constant import SMS_CODE_EXPIRE_TIME, YUNTONGXUN_EXPIRE_TIME
+from apps.verifications.constant import SMS_CODE_EXPIRE_TIME,YUNTONGXUN_EXPIRE_TIME
 from libs.captcha.captcha import captcha
 from libs.yuntongxun.sms import CCP
 from utils.response_code import RETCODE
@@ -56,8 +55,10 @@ class SMSCodeView(View):
             logger.error(e)
             return http.HttpResponseBadRequest("数据库链接问题")
 
-        # 先看有没有已经获取
+        # 先看数据库中有没有获取到
         send_flag = redis_conn.get('send_flag%s'%mobile)
+        if send_flag is not None:
+            return http.HttpResponseBadRequest("等下在操作哦,有点太频繁了")
 
 
         from random import randint
@@ -66,11 +67,14 @@ class SMSCodeView(View):
         # .info会将生成的短信验证码显示到控制台
         logger.info(sms_code)
         # 保存短信验证码
-        redis_conn.setex('sms_%s'%mobile, SMS_CODE_EXPIRE_TIME, sms_code)
+        # redis_conn.setex('sms_%s'%mobile, SMS_CODE_EXPIRE_TIME, sms_code)
+        # 通过redis连接,创建管道实例对象
+        pl = redis_conn.pipeline()
+        # 将redis实例放到管道中
+        pl.setex('sms%s'%mobile,SMS_CODE_EXPIRE_TIME,sms_code)
+        pl.setex('send_flag_%s' % mobile, 60, 1)
+
         # 发送短信验证码
-        CCP().send_template_sms(mobile,[sms_code,YUNTONGXUN_EXPIRE_TIME],1)
+        # CCP().send_template_sms(mobile,[sms_code,YUNTONGXUN_EXPIRE_TIME],1)
         return http.JsonResponse({ 'code':RETCODE.OK })
-
-
-        pass
 
