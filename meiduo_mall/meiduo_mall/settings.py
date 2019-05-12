@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 import os
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
+from django.conf.global_settings import AUTHENTICATION_BACKENDS
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
@@ -201,3 +203,7 @@ LOGGING = {
 
 # 用我们的user替换电脑的user
 AUTH_USER_MODEL = 'users.User'
+# 默认的用户认证后端
+# AUTHENTICATION_BACKENDS = ['django.contrib.auth.backends.ModelBackend']
+# 指定自定义的用户认证后端
+AUTHENTICATION_BACKENDS = ['apps.users.utils.UsernameMobileAuthBackend']
