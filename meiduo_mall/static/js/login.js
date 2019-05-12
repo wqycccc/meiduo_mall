@@ -23,7 +23,7 @@ var vm = new Vue({
             }
         },
 		// 检查密码
-        check_pwd: function(){
+        check_password: function(){
         	var re = /^[0-9A-Za-z]{8,20}$/;
 			if (re.test(this.password)) {
                 this.error_pwd = false;
