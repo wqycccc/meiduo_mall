@@ -1,6 +1,7 @@
 import re
 from django import http
 from django.contrib.auth import authenticate, login
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.views import View
@@ -268,3 +269,12 @@ class LogoutView(View):
         response.delete_cookie('username')
 
         return response
+
+
+#     用户中心
+# django自带了认证的一个方法，可以判断　用户是否登陆了(LoginRequiredMixin)
+class UserInfoView(LoginRequiredMixin,View):
+    # 提供个人信息页面
+    def get(self,request):
+        # 跳转到用户中心界面
+        return render(request,'user_center_info.html')
