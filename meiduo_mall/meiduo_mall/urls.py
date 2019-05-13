@@ -20,7 +20,10 @@ from django.contrib import admin
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     # url(r'^$',log),
+    # 注册页面
     url(r'^',include('apps.users.urls',namespace='users')),
+
     url(r'^',include('apps.contents.urls',namespace='contents')),
+    # 短信验证码页面
     url(r'^', include('apps.verifications.urls',namespace='verifications')),
 ]

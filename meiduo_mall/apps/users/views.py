@@ -234,8 +234,7 @@ class LoginView(View):
         if user is None:
             return render(request,'login.html',{'login_error_message':'用户名或密码输入有误'})
         # 7.保持会话
-        login(request,user)
-        # 记住登录(记住密码那个按钮)/不记住登录
+        login(request, user)
         if remembered != 'on':
             # set_expiry 设置过期时间
             # 没有记住用户:浏览器关闭就过期
@@ -244,8 +243,28 @@ class LoginView(View):
             # 记住用户:None默认表示两周以后过期
             request.session.set_expiry(None)
 
+        # 记住登录(记住密码那个按钮)/不记住登录
+        #     返回响应之前设置cooking
+        response = redirect(reverse('contents:index'))
+        if remembered != 'on':
+            # 获取cooking,不记住密码时
+            response.set_cookie('username', user.username, max_age=0)
+
+        else:
+            # 记住密码时
+            response.set_cookie('username',user.username,max_age= 3600*24*14)
 
         # 8.返回相应
-        return redirect(reverse('contents:index'))
+        return response
+# 退出登录
+from django.contrib.auth import logout
+class LogoutView(View):
+    def get(self,request):
+        # 清理session
+        logout(request)
+        # 在退出登陆时,重定向到登录页/主页面都行
+        response = redirect(reverse('users:login'))
+#         在退出登录的时候,清除cookie中的username
+        response.delete_cookie('username')
 
-
+        return response
