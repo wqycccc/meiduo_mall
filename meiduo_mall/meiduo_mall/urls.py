@@ -22,8 +22,9 @@ urlpatterns = [
     # url(r'^$',log),
     # 注册页面
     url(r'^',include('apps.users.urls',namespace='users')),
-
+    # 登录页面
     url(r'^',include('apps.contents.urls',namespace='contents')),
     # 短信验证码页面
     url(r'^', include('apps.verifications.urls',namespace='verifications')),
+    url(r'^',include('apps.oauth.urls',namespace='oauth'))
 ]
