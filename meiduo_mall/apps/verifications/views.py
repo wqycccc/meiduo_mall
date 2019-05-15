@@ -72,8 +72,9 @@ class SMSCodeView(View):
         # 通过redis连接,创建管道实例对象
         pl = redis_conn.pipeline()
         # 将redis实例放到管道中
-        pl.setex('sms%s'%mobile,SMS_CODE_EXPIRE_TIME,sms_code)
+        pl.setex('sms_%s'%mobile,SMS_CODE_EXPIRE_TIME,sms_code)
         pl.setex('send_flag_%s' % mobile, 60, 1)
+        pl.execute()
 
         # 发送短信验证码
         # CCP().send_template_sms(mobile,[sms_code,YUNTONGXUN_EXPIRE_TIME],1)

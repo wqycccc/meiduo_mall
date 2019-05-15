@@ -249,7 +249,7 @@ class LoginView(View):
         response = redirect(reverse('contents:index'))
         if remembered != 'on':
             # 获取cooking,不记住密码时
-            response.set_cookie('username', user.username, max_age=0)
+            response.set_cookie('username', user.username,)
 
         else:
             # 记住密码时
