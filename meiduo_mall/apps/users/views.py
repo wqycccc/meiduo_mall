@@ -243,10 +243,14 @@ class LoginView(View):
         else:
             # 记住用户:None默认表示两周以后过期
             request.session.set_expiry(None)
-
-        # 记住登录(记住密码那个按钮)/不记住登录
-        #     返回响应之前设置cooking
-        response = redirect(reverse('contents:index'))
+        #     next设置
+        next = request.GET.get('next')
+        if next:
+            response = redirect(next)
+        else:
+            response = redirect(reverse('contents:index'))
+            # 记住登录(记住密码那个按钮)/不记住登录
+            #     返回响应之前设置cooking
         if remembered != 'on':
             # 获取cooking,不记住密码时
             response.set_cookie('username', user.username,)

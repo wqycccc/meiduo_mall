@@ -19,7 +19,7 @@ class QQAuthURLView(View):
 
     def get(self,request):
         # 创建实例 (QQLoginTool)
-        state = 'test'
+        state = request.GET.get('next')
         qq = OAuthQQ(
             client_id= settings.QQ_CLIENT_ID,
             redirect_uri=settings.QQ_REDIRECT_URI,
@@ -54,9 +54,7 @@ class QQAuthUserView(View):
         # 4.判断openid所对应的user信息是否存在
         try:
             qquser = OAuthQQUser.objects.get(openid=openid)
-            print(qquser)
-        except Exception as e:
-            print(e)
+        except OAuthQQUser.DoesNotExist:
             # 5.如果不存在就进行绑定(相当于没绑定)
             openid_token = generic_openid_token(openid)
             return render(request,'oauth_callback.html',context={'openid':openid_token})
@@ -65,8 +63,12 @@ class QQAuthUserView(View):
             user =qquser.user
             #保持登录状态
             login(request,user)
-        #     设置cooking
-            response= redirect(reverse('contents:index'))
+            # next的设置
+            next = request.GET.get('state')
+            if next:
+                response = redirect(next)
+            else:
+                response= redirect(reverse('contents:index'))
             response.set_cookie('username',user.username,max_age=14*24*3600)
             # 跳转
             return response
