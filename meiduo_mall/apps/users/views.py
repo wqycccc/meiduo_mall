@@ -1,3 +1,5 @@
+
+import json
 import re
 from django import http
 from django.contrib.auth import authenticate, login
@@ -7,6 +9,8 @@ from django.urls import reverse
 from django.views import View
 import logging
 from django_redis import get_redis_connection
+
+from utils.response_code import RETCODE
 from .models import User
 
 logger = logging.getLogger('django')
@@ -275,10 +279,83 @@ class LogoutView(View):
         return response
 
 
-#     用户中心
+# 用户中心
+
 # django自带了认证的一个方法，可以判断　用户是否登陆了(LoginRequiredMixin)
 class UserInfoView(LoginRequiredMixin,View):
     # 提供个人信息页面
     def get(self,request):
+        # 获取指定的数据组织上下文
+        context = {
+            'username':request.user.username,
+            'mobile':request.user.mobile,
+            'email':request.user.email,
+            'email_active':request.user.email_active
+        }
         # 跳转到用户中心界面
-        return render(request,'user_center_info.html')
+        return render(request,'user_center_info.html',context=context)
+
+"""
+需求(用户做了什么,我们要做什么[ 需要让前端提交什么,我们后端接收什么]):
+    当用户在邮件输入框中,输入一个邮件之后,点击保存的时候,需要让前端将邮箱信息发送给后端
+后端
+
+    确定请求方式和路由:
+        put         /emails/
+    大体步骤:
+        1.必须是登陆用户才可以更新邮箱信息
+        2.接收用户提交的邮箱信息
+        3.验证邮箱信息是否符合邮箱规则
+        4.保存数据
+        5.发送激活邮件
+        6.返回相应
+
+
+    GET     :       获取数据
+    POST    :       新增数据
+    PUT     :       更新数据/修改数据  put和post是类似的 我们的请求数据是请求的body中
+    DELETE  :       删除数据
+"""
+# 添加邮箱
+class EmailView(View):
+
+    def put(self,request):
+        # 1.必须是登陆用户才可以更新邮箱信息
+        # 2.接收用户提交的邮箱信息
+        # 2.1.获取body数据
+        body = request.body
+        # 2.2.body数据是bytes类型,进行类型转换
+        body_str = body.decode()
+        # 2.3.对字符串JSON,进行转换
+        data = json.loads(body_str)
+
+        email = data.get('email')
+        # 3.验证邮箱信息是否符合邮箱规则
+        if not re.match(r'^[a-z0-9][\w\.\-]*@[a-z0-9\-]+(\.[a-z]{2,5}){1,2}$',email):
+            return http.JsonResponse({'code':RETCODE.PARAMERR,'errmsg':'参数错误'})
+
+        # 4.更新数据(赋值)
+        try:
+            request.user.email = email
+            request.user.save()
+        except Exception as e:
+            logger.error(e)
+            return http.JsonResponse({'code':RETCODE.DBERR,"errmsg":'添加邮箱失败'})
+        # 5.发送激活邮件
+
+        from django.core.mail import send_mail
+        # send_mail(subject, message, from_email, recipient_list,
+        subject = '美多商城'
+        message = ''
+        from_email = '美多商城<13293833805@163.com>'
+        recipient_list = [email]
+        html_message = "<a href='#'>戳我,戳我,戳我有惊喜</a>"
+        send_mail(subject=subject,
+                  message=message,
+                  from_email=from_email,
+                  recipient_list=recipient_list,
+                  html_message=html_message)
+
+        # 6.返回相应
+        return http.JsonResponse({'code': RETCODE.OK, "errmsg": '添加邮箱成功'})
+

@@ -15,4 +15,6 @@ urlpatterns = [
     url(r'^logout/$',views.LogoutView.as_view(),name='logout'),
     # 判断用户是否登录
     url(r'^info/$',views.UserInfoView.as_view(),name='info'),
+    #添加邮箱
+    url(r'^emails/$',views.EmailView.as_view(),name='email'),
 ]
