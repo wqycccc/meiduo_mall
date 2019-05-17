@@ -350,11 +350,19 @@ class EmailView(View):
         from_email = '美多商城<13293833805@163.com>'
         recipient_list = [email]
         html_message = "<a href='#'>戳我,戳我,戳我有惊喜</a>"
-        send_mail(subject=subject,
-                  message=message,
-                  from_email=from_email,
-                  recipient_list=recipient_list,
-                  html_message=html_message)
+        # send_mail(subject=subject,
+        #           message=message,
+        #           from_email=from_email,
+        #           recipient_list=recipient_list,
+        #           html_message=html_message)
+        from celery_tasks.email.tasks import send_verify_email
+        send_verify_email.delay(
+            subject = subject,
+            message=message,
+            from_email=from_email,
+            recipient_list=recipient_list,
+            html_message=html_message
+        )
 
         # 6.返回相应
         return http.JsonResponse({'code': RETCODE.OK, "errmsg": '添加邮箱成功'})
