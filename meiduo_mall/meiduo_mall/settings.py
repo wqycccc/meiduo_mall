@@ -43,7 +43,8 @@ INSTALLED_APPS = [
     'apps.users',
     'apps.contents',
     'apps.verifications',
-    'apps.oauth'
+    'apps.oauth',
+    'apps.areas',
 ]
 
 MIDDLEWARE = [
@@ -229,3 +230,5 @@ EMAIL_PORT = 25
 EMAIL_HOST_USER = '13293833805@163.com'
 #在邮箱中设置的客户端授权密码
 EMAIL_HOST_PASSWORD = 'wqy3805'
+# 邮箱验证链接
+EMAIL_VERIFY_URL = 'http://www.meiduo.site:8000/emails/verification/'

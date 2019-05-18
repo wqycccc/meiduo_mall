@@ -1,7 +1,10 @@
 import re
 from django.contrib.auth.backends import ModelBackend
+from django.views import View
+from itsdangerous import BadData
 
 from apps.users.models import User
+
 
 """
 django库中没有手机号登录,所以需要自定义一个方法,并且继承库中的方法
@@ -41,3 +44,35 @@ class UsernameMobileAuthBackend(ModelBackend):
         user = get_user_by_account(username)
         if user and user.check_password(password):
             return user
+
+from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
+from meiduo_mall import settings
+# 加密邮件
+
+
+def generic_verify_email_url(user_id):
+
+    s = Serializer(secret_key=settings.SECRET_KEY, expires_in=3600)
+
+    data = {
+        'user_id':user_id
+    }
+
+    token = s.dumps(data)
+
+    return settings.EMAIL_VERIFY_URL +"?token=" + token.decode()
+#解密邮件
+def check_veryfy_email_token(token):
+
+    #1.创建实例对象
+    s = Serializer(secret_key=settings.SECRET_KEY, expires_in=3600)
+    #2.对数据进行解密,解密的时候可能有异常
+    try:
+        result = s.loads(token)
+    except BadData:
+        return None
+    #3.返回数据
+    return result.get('user_id')
+
+
+

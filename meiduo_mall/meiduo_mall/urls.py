@@ -26,5 +26,8 @@ urlpatterns = [
     url(r'^',include('apps.contents.urls',namespace='contents')),
     # 短信验证码页面
     url(r'^', include('apps.verifications.urls',namespace='verifications')),
-    url(r'^',include('apps.oauth.urls',namespace='oauth'))
+    # qq登录
+    url(r'^',include('apps.oauth.urls',namespace='oauth')),
+#     收货地址
+    url(r'^',include('apps.areas.urls',namespace='areas')),
 ]

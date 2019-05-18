@@ -10,6 +10,7 @@ from django.views import View
 import logging
 from django_redis import get_redis_connection
 
+from apps.users.utils import generic_verify_email_url, check_veryfy_email_token
 from utils.response_code import RETCODE
 from .models import User
 
@@ -349,7 +350,12 @@ class EmailView(View):
         message = ''
         from_email = '美多商城<13293833805@163.com>'
         recipient_list = [email]
-        html_message = "<a href='#'>戳我,戳我,戳我有惊喜</a>"
+        # html_message = "<a href='#'>hahahah</a>"
+        verify_url = generic_verify_email_url(request.user.id)
+        html_message ='<p>尊敬的用户您好！</p>' \
+                   '<p>感谢您使用美多商城。</p>' \
+                   '<p>您的邮箱为：%s 。请点击此链接激活您的邮箱：</p>' \
+                   '<p><a href="%s">%s<a></p>' % (email, verify_url, verify_url)
         # send_mail(subject=subject,
         #           message=message,
         #           from_email=from_email,
@@ -364,6 +370,48 @@ class EmailView(View):
             html_message=html_message
         )
 
+
         # 6.返回相应
         return http.JsonResponse({'code': RETCODE.OK, "errmsg": '添加邮箱成功'})
+"""
+需求:
+    当用户点击激活连接的时候,可以展示该页面,同时,获取前端提交过来的token
+后端:
+
+    请求方式和路由:
+        GET     emails/verification
+
+    1.接收token
+    2.验证token
+    3.根据user_id查询用户信息
+    4.改变用户信息
+    5.返回相应(跳转到个人中心页面)
+"""
+class EmailVerifyView(View):
+
+    def get(self,request):
+        # 1.接收token
+        token = request.GET.get('token')
+        if token is None:
+            return http.HttpResponseBadRequest('参数错误')
+        # 2.验证token
+        user_id = check_veryfy_email_token(token)
+        if user_id is None:
+            return http.HttpResponseBadRequest('参数错误')
+        # 3.根据user_id查询用户信息
+            # pk primary key 主键的意思
+            # 如果我们不记得主键是哪个字段的时候,可以直接使用pk
+            # 系统会自动使用主键
+        try:
+            # 4.改变用户信息
+            user = User.objects.get(pk = user_id)
+            if user is not None:
+                user.email_active = True
+                user.save()
+        except User.DoesNotExist:
+            return http.HttpResponseBadRequest('参数错误')
+        # 5.返回响应
+        return redirect(reverse('users:info'))
+
+
 
