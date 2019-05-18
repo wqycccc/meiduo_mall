@@ -413,5 +413,8 @@ class EmailVerifyView(View):
         # 5.返回响应
         return redirect(reverse('users:info'))
 
+class AddressView(View):
+    def get(self,request):
+        return render(request,'user_center_site.html')
 
 
