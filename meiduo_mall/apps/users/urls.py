@@ -21,5 +21,9 @@ urlpatterns = [
     url(r'^emails/verification/$',views.EmailVerifyView.as_view(),name='emailverify'),
     # 收件地址视图
     url(r'^address/$',views.AddressView.as_view(),name='address'),
+    #新增地址
+    url(r'^addresses/create/$',views.CreateAddressView.as_view(),name='createaddress'),
+#     修改地址
+    url(r'^/addresses/(?P<address_id>\d+)/$',views.UpdateDestroyAddressView.as_view(),name='updateaddress')
 
 ]
