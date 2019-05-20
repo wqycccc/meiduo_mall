@@ -23,11 +23,12 @@ urlpatterns = [
     url(r'^address/$',views.AddressView.as_view(),name='address'),
     #新增地址
     url(r'^addresses/create/$',views.CreateAddressView.as_view(),name='createaddress'),
-#     修改地址
+    #修改地址
     url(r'^addresses/(?P<address_id>\d+)/$',views.UpdateDestroyAddressView.as_view(),name='updateaddress'),
     # 设置默认地址
     url(r'^addresses/(?P<address_id>\d+)/default/$',views.DefaultAddressView.as_view(),name='defaultaddress'),
     # 修改地址标题
     url(r'^addresses/(?P<address_id>\d+)/title/$',views.UpdateTitleAddressView.as_view(),name='titleaddress'),
-
+    #修改密码
+    url(r'^changepassword/$',views.ChangePasswordView.as_view(),name='changepassword'),
 ]
