@@ -233,3 +233,9 @@ EMAIL_HOST_USER = '13293833805@163.com'
 EMAIL_HOST_PASSWORD = 'wqy3805'
 # 邮箱验证链接
 EMAIL_VERIFY_URL = 'http://www.meiduo.site:8000/emails/verification/'
+
+
+# 指定自定义的Django文件存储类
+DEFAULT_FILE_STORAGE = 'utils.fastdfs.storage.MyStorage'
+
+FDFS_URL = 'http://192.168.19.50:8888/'
