@@ -30,4 +30,8 @@ urlpatterns = [
     url(r'^',include('apps.oauth.urls',namespace='oauth')),
 #     收货地址
     url(r'^',include('apps.areas.urls',namespace='areas')),
+    # 商品列表
+    url(r'^',include('apps.goods.urls',namespace='goods')),
+#     全局搜索
+    url(r'^search/', include('haystack.urls')),
 ]
