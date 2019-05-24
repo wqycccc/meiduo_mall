@@ -34,4 +34,6 @@ urlpatterns = [
     url(r'^',include('apps.goods.urls',namespace='goods')),
 #     全局搜索
     url(r'^search/', include('haystack.urls')),
+    # 购物车
+    url(r'^', include('apps.carts.urls',namespace='carts')),
 ]
