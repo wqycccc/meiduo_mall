@@ -7,7 +7,7 @@ var vm = new Vue({
         hots: [],
         sku_id: sku_id,
         sku_count: 1,
-        sku_price: price,
+        sku_price: sku_price,
         sku_amount: 0,
         category_id: category_id,
         tab_content: {

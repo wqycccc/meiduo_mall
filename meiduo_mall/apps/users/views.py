@@ -696,3 +696,30 @@ class ChangePasswordView(LoginRequiredMixin, View):
         response.delete_cookie('username')
 
         return response
+
+"""
+添加用户浏览记录的
+需求
+
+    当登陆用户访问某一个商品详情页面的时候,需要让前端发送一个ajax请求,将用户信息和sku_id
+    发送给后端
+ 后端:
+
+    1.接收数据
+    2.判断验证数据
+    3.数据入库(redis)
+    4.返回相应
+
+    请求方式和路由
+    POST    browse_histories/
+"""
+
+
+class HistoryView(LoginRequiredJSONMixin,View):
+
+    def post(self,request):
+        # 1.接收数据
+        user = request.user
+        data = json.loads(request.body.decode())
+        sku_id = data.get('sku_id')
+        pass
