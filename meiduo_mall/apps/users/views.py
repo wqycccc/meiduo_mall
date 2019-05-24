@@ -10,6 +10,7 @@ from django.views import View
 import logging
 from django_redis import get_redis_connection
 
+from apps.goods.models import SKU
 from apps.users.utils import generic_verify_email_url, check_veryfy_email_token
 from utils.response_code import RETCODE
 from utils.views import LoginRequiredJSONMixin
@@ -716,10 +717,61 @@ class ChangePasswordView(LoginRequiredMixin, View):
 
 
 class HistoryView(LoginRequiredJSONMixin,View):
-
+    # 保存用户浏览记录
     def post(self,request):
         # 1.接收数据
         user = request.user
         data = json.loads(request.body.decode())
         sku_id = data.get('sku_id')
-        pass
+        # 2.判断验证数据
+        try:
+            SKU.objects.get(pk = sku_id)
+        except SKU.DoesNotExist:
+            return http.JsonResponse({'code':RETCODE.NODATAERR,'errmsg':'暂无此商品'})
+        # 3.1链接数据库
+        redis_conn = get_redis_connection('history')
+        pl = redis_conn.pipeline()
+        user_id = request.user.id
+        # 3.1 先去重 通过 lrem 找到和当前value一样的数据,先删除
+        # redis_conn.lrem(key,count,value)
+        pl.lrem('history_%s'%user_id,0,sku_id)
+        # 3.2从左边添加
+        pl.lpush('history_%s'%user_id,sku_id)
+        # 3.3 对列表进行裁剪
+        pl.ltrim('history_%s'%user_id,0,4)
+
+        # 执行
+        pl.execute()
+
+        # 返回响应
+        return http.JsonResponse({'code':RETCODE.OK,'errmsg':'OK'})
+# 查询用户浏览记录
+    def get(self,request):
+        """
+           1.获取用户信息
+           2.连接redis.获取用户信息 [1,2,3,4,]
+           3.对id列表进行遍历来获取详细信息
+               根据id进行查询,
+               将对象转换为字典
+           4.返回数据
+           """
+        # 1.获取用户信息
+        user=request.user
+
+        # 2.连接redis.获取用户信息 [1,2,3,4,]
+        redis_conn = get_redis_connection('history')
+        ids = redis_conn.lrange('history_%s'%user.id,0,4)
+        # 3.对id列表进行遍历来获取详细信息
+        #     根据id进行查询,
+        skus = []
+        for sku_id in ids:
+            sku = SKU.objects.get(pk = sku_id)
+        #     将对象转换为字典
+            skus.append({
+                'id': sku.id,
+                'name': sku.name,
+                'default_image_url': sku.default_image.url,
+                'price': sku.price
+            })
+        # 4.返回数据
+        return http.JsonResponse({'code': RETCODE.OK, 'errmsg': 'ok', 'skus': skus})
