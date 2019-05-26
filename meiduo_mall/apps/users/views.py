@@ -10,6 +10,7 @@ from django.views import View
 import logging
 from django_redis import get_redis_connection
 
+from apps.carts.utils import merge_cart_cookie_to_redis
 from apps.goods.models import SKU
 from apps.users.utils import generic_verify_email_url, check_veryfy_email_token
 from utils.response_code import RETCODE
@@ -265,6 +266,8 @@ class LoginView(View):
         else:
             # 记住密码时
             response.set_cookie('username',user.username,max_age= 3600*24*14)
+        # 在这里合并
+        response = merge_cart_cookie_to_redis(request=request, user=user, response=response)
 
         # 8.返回相应
         return response

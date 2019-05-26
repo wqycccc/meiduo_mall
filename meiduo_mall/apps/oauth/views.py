@@ -7,6 +7,7 @@ from django.views import View
 from django.http import JsonResponse
 from django_redis import get_redis_connection
 
+from apps.carts.utils import merge_cart_cookie_to_redis
 from apps.oauth.models import OAuthQQUser
 from apps.oauth.utils import generic_openid_token, check_openid_token
 from apps.users.models import User
@@ -151,6 +152,8 @@ class QQAuthUserView(View):
 #        5.设置cooking
         response=redirect(reverse('contents:index'))
         response.set_cookie('username',user.username,max_age=14*24*3600)
+#         在这里合并
+        response = merge_cart_cookie_to_redis(request=request, user=user, response=response)
 #         6.返回响应
         return response
 

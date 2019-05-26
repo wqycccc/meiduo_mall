@@ -256,14 +256,14 @@ EMAIL_VERIFY_URL = 'http://www.meiduo.site:8000/emails/verification/'
 # 指定自定义的Django文件存储类
 DEFAULT_FILE_STORAGE = 'utils.fastdfs.storage.MyStorage'
 
-FDFS_URL = 'http://192.168.19.75:8888/'
+FDFS_URL = 'http://192.168.228.132:8888/'
 
 
 # Haystack与elasticsearch的对接配置
 HAYSTACK_CONNECTIONS = {
     'default': {
         'ENGINE': 'haystack.backends.elasticsearch_backend.ElasticsearchSearchEngine',
-        'URL': 'http://192.168.19.50:9200/', # Elasticsearch服务器ip地址，端口号固定为9200
+        'URL': 'http://192.168.228.132:9200/', # Elasticsearch服务器ip地址，端口号固定为9200
         'INDEX_NAME': 'meiduo_mall', # Elasticsearch建立的索引库的名称
     },
 }
