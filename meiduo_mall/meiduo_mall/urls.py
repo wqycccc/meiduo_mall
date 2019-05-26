@@ -36,4 +36,6 @@ urlpatterns = [
     url(r'^search/', include('haystack.urls')),
     # 购物车
     url(r'^', include('apps.carts.urls',namespace='carts')),
+    # 订单
+    url(r'^', include('apps.orders.urls',namespace='orders')),
 ]
