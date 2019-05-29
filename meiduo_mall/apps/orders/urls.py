@@ -5,4 +5,5 @@ from apps.orders import views
 urlpatterns = [
     url(r'^orders/settlement/$', views.PlaceOrderView.as_view(), name='placeorder'),
     url(r'^orders/commit/$', views.OrderCommitView.as_view(), name='commit'),
+    url(r'^orders/success/$', views.OrderSuccessView.as_view(), name='success'),
 ]

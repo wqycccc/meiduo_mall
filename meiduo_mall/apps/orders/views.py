@@ -161,48 +161,77 @@ class OrderCommitView(LoginRequiredJSONMixin, View):
             ids = selected_carts.keys()
             #     2.3 对id进行遍历
             for id in ids:
-                #         2.4 查询商品
-                sku = SKU.objects.get(pk=id)
-                #         2.5 库存量的判断
-                count = selected_carts[sku.id]
-                if sku.stock < count:
-                    # 出现问题进行回滚
-                    transaction.savepoint_rollback(save_point)
-                    # 说明库存不足
-                    return http.JsonResponse({'code': RETCODE.STOCKERR, 'errmsg': '库存不足'})
+                while True:
+                    #         2.4 查询商品
+                    sku = SKU.objects.get(pk=id)
+                    #         2.5 库存量的判断
+                    count = selected_carts[sku.id]
+                    if sku.stock < count:
+                        # 出现问题进行回滚
+                        transaction.savepoint_rollback(save_point)
+                        # 说明库存不足
+                        return http.JsonResponse({'code': RETCODE.STOCKERR, 'errmsg': '库存不足'})
 
-                    # 2.6 修改商品的库存和销量
-                # sku.stock -= count
-                # sku.sales += count
-                # sku.save()
-                import time
-                time.sleep(5)
-                # 2.6.1  乐观锁
-                # 先获取之前的库存
-                old_stock = sku.stock
-                new_stock = sku.stock - count  # 新库存
-                new_sales = sku.sales + count  #新销量
-                rect = SKU.objects.filter(id = id,stock=old_stock).update(
-                    stock = new_stock,
-                    sales = new_sales
-                )
-                if rect == 0:
-                    # 下单失败
-                    transaction.savepoint_rollback(save_point)
-                    return http.JsonResponse({'code':RETCODE.STOCKERR,'errmsg':'下单失败'})
-                else:
-                    print('下单成功')
-                #         2.7 累加总数量和总金额
-                #         2.8 保存订单商品信息
-                order = OrderGoods.objects.create(
-                    order=order,
-                    sku=sku,
-                    count=count,
-                    price=sku.price,
-                )
+                        # 2.6 修改商品的库存和销量
+                    # sku.stock -= count
+                    # sku.sales += count
+                    # sku.save()
+                    # import time
+                    # time.sleep(5)
+                    # 2.6.1  乐观锁
+                    # 先获取之前的库存
+                    old_stock = sku.stock
+                    new_stock = sku.stock - count  # 新库存
+                    new_sales = sku.sales + count  #新销量
+                    rect = SKU.objects.filter(id = id,stock=old_stock).update(
+                        stock = new_stock,
+                        sales = new_sales
+                    )
+                    if rect == 0:
+                        continue
+                        # 下单失败
+                    #     transaction.savepoint_rollback(save_point)
+                    #     return http.JsonResponse({'code':RETCODE.STOCKERR,'errmsg':'下单失败'})
+                    # else:
+                    #     print('下单成功')
+                    #         2.7 累加总数量和总金额
+                    order.total_count += count
+                    order.total_amount += (sku.price * count)
+                    #         2.8 保存订单商品信息
+                    OrderGoods.objects.create(
+                        order=order,
+                        sku=sku,
+                        count=count,
+                        price=sku.price,
+
+                    )
+                    break
                 #      2.9 保存订单的总数量和总金额
+            order.total_amount += order.freight   #添加邮费
             order.save()
             # 3.提交
             transaction.savepoint_commit(save_point)
-            # 返回响应
-            return http.JsonResponse({'code': RETCODE.OK, 'errmsg': '下单成功', 'order': order.order_id})
+        # # 4删除购物车中以结算的商品
+        # pl = redis_conn.pipeline()
+        # pl.hdel('carts_%s' % user.id, *selected_ids)
+        # pl.srem('selected_%s' % user.id, *selected_ids)
+        # pl.execute()
+
+        # 返回响应
+        return http.JsonResponse({'code': RETCODE.OK, 'errmsg': 'ok', 'order_id': order.order_id})
+
+
+
+class OrderSuccessView(LoginRequiredMixin,View):
+    def get(self,request):
+#     展示提交订单成功页面
+        order_id = request.GET.get('order_id')
+        payment_amount = request.GET.get('payment_amount')
+        pay_method = request.GET.get('pay_method')
+
+        context = {
+            'order_id': order_id,
+            'payment_amount': payment_amount,
+            'pay_method': pay_method
+        }
+        return render(request, 'order_success.html', context)
