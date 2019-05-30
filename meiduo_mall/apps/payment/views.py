@@ -6,6 +6,7 @@ from django.shortcuts import render
 from django.views import View
 
 from apps.orders.models import OrderInfo
+from apps.payment.models import Payment
 from meiduo_mall import settings
 from utils.response_code import RETCODE
 from utils.views import LoginRequiredJSONMixin
@@ -54,3 +55,59 @@ class PaymentView(LoginRequiredJSONMixin, View):
         alipay_url=settings.ALIPAY_URL + '?' +order_string
         # 5.返回生成的url
         return http.JsonResponse({'code':RETCODE.OK,'errmsg':'ok','alipay_url':alipay_url})
+"""
+    当我们支付完成之后,支付宝会将参数返回给我们
+    我们需要获取参数,按照文档的要求对数据进行验证,就可以获取 支付宝交易流水号和商家订单id
+
+    回调的路由中 有需要的参数,我们需要获取到参数
+"""
+# 保存订单支付结果
+class PaymentStatusView(View):
+
+    def get(self, request):
+        # 1.创建alipay实例
+        app_private_key_string = open(settings.APP_PRIVATE_KEY_PATH).read()
+        alipay_public_key_string = open(settings.ALIPAY_PUBLIC_KEY_PATH).read()
+
+        alipay = AliPay(
+            appid=settings.ALIPAY_APPID,
+            app_notify_url=None,  # 默认回调url
+            app_private_key_string=app_private_key_string,
+            # 支付宝的公钥，验证支付宝回传消息使用，不是你自己的公钥,
+            alipay_public_key_string=alipay_public_key_string,
+            sign_type="RSA2",  # RSA 或者 RSA2
+            debug=settings.ALIPAY_DEBUG  # 默认False
+        )
+
+        # 2.验证数据
+        data = request.GET.dict()
+        # sign 不能参与签名验证
+        signature = data.pop("sign")
+
+        # verify
+        success = alipay.verify(data, signature)
+        if success:
+            # 我们就可以获取到 out_trade_no 和 trade_no
+            """
+            trade_no	String	必填	64	支付宝交易号	2013112011001004330000121536
+            out_trade_no	String	必填	64	商户订单号	6823789339978248
+            """
+            # 支付宝的
+            trade_no = data.get('trade_no')
+            # 商家的
+            out_trade_no = data.get('out_trade_no')
+
+            # 订单结果保存
+            Payment.objects.create(
+                order_id=out_trade_no,
+                trade_id=trade_no
+            )
+
+            # 修改订单的状态
+            OrderInfo.objects.filter(order_id=out_trade_no).update(status=OrderInfo.ORDER_STATUS_ENUM['UNSEND'])
+
+        context = {
+            'trade_id': trade_no
+        }
+
+        return render(request, 'pay_success.html', context=context)
