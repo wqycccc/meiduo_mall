@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_crontab', # 定时任务
 
     'apps.users',
     'apps.contents',
@@ -52,6 +53,15 @@ INSTALLED_APPS = [
     'haystack'
 ]
 
+CRONJOBS = [
+    # 每1分钟生成一次首页静态文件
+    # *分 *时 *日 *月 *周
+    # 参数1: 频次
+    # 参数2: 定时任务(函数)
+    # 参数3: 日志
+    # 每1分钟生成一次首页静态文件
+    ('*/1 * * * *', 'apps.contents.crons.generate_static_index_html', '>> ' + os.path.join(BASE_DIR, 'logs/crontab.log'))
+]
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
